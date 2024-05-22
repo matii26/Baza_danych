@@ -306,3 +306,104 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 
         
+package com.example.czolko;
+
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+
+import java.util.ArrayList;
+import java.util.List;
+
+// Klasa DatabaseHelper dziedziczy po SQLiteOpenHelper, co pozwala na zarządzanie bazą danych SQLite w Androidzie
+public class DatabaseHelper extends SQLiteOpenHelper {
+
+    // Nazwa bazy danych
+    private static final String DATABASE_NAME = "czolko.db";
+    // Wersja bazy danych
+    private static final int DATABASE_VERSION = 1;
+
+    // Konstruktor klasy DatabaseHelper
+    public DatabaseHelper(Context context) {
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    }
+
+    // Metoda onCreate jest wywoływana przy tworzeniu bazy danych
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        // Tworzenie tabeli categories, która przechowuje kategorie
+        db.execSQL("CREATE TABLE categories (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)");
+
+        // Tworzenie tabeli words, która przechowuje słowa, przypisując je do kategorii za pomocą category_id
+        db.execSQL("CREATE TABLE words (id INTEGER PRIMARY KEY AUTOINCREMENT, category_id INTEGER, word TEXT)");
+
+        // Wstawianie przykładowych danych do tabeli categories
+        db.execSQL("INSERT INTO categories (name) VALUES " +
+            "('Zwierzęta'), " +
+            "('Państwa'), " +
+            "('Jedzenie'), " +
+            "('Kolory'), " +
+            "('Zawody'), " +
+            "('Owoce'), " +
+            "('Samochody'), " +
+            "('Sporty'), " +
+            "('Filmy'), " +
+            "('Napoje')");
+
+        // Wstawianie przykładowych danych do tabeli words
+        db.execSQL("INSERT INTO words (category_id, word) VALUES " +
+            "(1, 'kot'), (1, 'pies'), (1, 'słoń'), (1, 'żyrafa'), (1, 'jeleń'), (1, 'tygrys'), " +
+            "(2, 'Polska'), (2, 'Niemcy'), (2, 'Francja'), (2, 'Włochy'), (2, 'Hiszpania'), (2, 'Japonia'), " +
+            "(3, 'pizza'), (3, 'sushi'), (3, 'hamburger'), (3, 'spaghetti'), (3, 'sałatka'), (3, 'kebab'), " +
+            "(4, 'czerwony'), (4, 'niebieski'), (4, 'zielony'), (4, 'żółty'), (4, 'fioletowy'), (4, 'pomarańczowy'), " +
+            "(5, 'lekarz'), (5, 'nauczyciel'), (5, 'informatyk'), (5, 'policjant'), (5, 'dziennikarz'), (5, 'artysta'), " +
+            "(6, 'jabłko'), (6, 'banan'), (6, 'truskawka'), (6, 'winogrono'), (6, 'pomarańcza'), (6, 'ananas'), " +
+            "(7, 'BMW'), (7, 'Audi'), (7, 'Mercedes'), (7, 'Toyota'), (7, 'Honda'), (7, 'Volkswagen'), " +
+            "(8, 'piłka nożna'), (8, 'koszykówka'), (8, 'siatkówka'), (8, 'bieganie'), (8, 'pływanie'), (8, 'rower'), " +
+            "(9, 'Forrest Gump'), (9, 'Gwiezdne wojny'), (9, 'Titanic'), (9, 'Harry Potter'), (9, 'Avengers'), (9, 'Piraci z Karaibów'), " +
+            "(10, 'kawa'), (10, 'herbata'), (10, 'cola'), (10, 'sok'), (10, 'woda'), (10, 'piwo')");
+    }
+
+    // Metoda onUpgrade jest wywoływana, gdy trzeba zaktualizować bazę danych do nowej wersji
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        // Usuwanie starych tabel, jeśli istnieją
+        db.execSQL("DROP TABLE IF EXISTS categories");
+        db.execSQL("DROP TABLE IF EXISTS words");
+        // Tworzenie nowych tabel
+        onCreate(db);
+    }
+
+    // Metoda pobierająca wszystkie kategorie z bazy danych
+    public List<String> getAllCategories() {
+        List<String> categories = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        // Zapytanie SQL do pobrania wszystkich nazw kategorii
+        Cursor cursor = db.rawQuery("SELECT name FROM categories", null);
+        if (cursor.moveToFirst()) {
+            do {
+                // Dodawanie nazw kategorii do listy
+                categories.add(cursor.getString(0));
+            } while (cursor.moveToNext());
+        }
+        cursor.close();  // Zamknięcie kursora
+        return categories;
+    }
+
+    // Metoda pobierająca słowa dla określonej kategorii
+    public List<String> getWordsForCategory(String categoryName) {
+        List<String> words = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        // Zapytanie SQL do pobrania wszystkich słów dla danej kategorii
+        Cursor cursor = db.rawQuery("SELECT words.word FROM words JOIN categories ON words.category_id = categories.id WHERE categories.name = ?", new String[]{categoryName});
+        if (cursor.moveToFirst()) {
+            do {
+                // Dodawanie słów do listy
+                words.add(cursor.getString(0));
+            } while (cursor.moveToNext());
+        }
+        cursor.close();  // Zamknięcie kursora
+        return words;
+    }
+}
